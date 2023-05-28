@@ -1,0 +1,18 @@
+{% extends 'note/base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-20 pt-5">
+            <h2>{{ note.title }}</h2>
+            <h6>Author: {{ note.author }}</h6>
+            <br>
+
+            <p>{{ note.content }}</p>
+            <footer>{{ note.created }}</footer>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

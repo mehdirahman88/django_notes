@@ -1,0 +1,49 @@
+{% extends 'note/base.html' %}
+
+{% block content %}
+
+{% if user.username %}
+    Your Roles:
+    {% if user.is_superuser %}
+        [superuser]
+    {% endif %}
+    {% if user.is_staff %}
+        [staff]
+    {% endif %}
+    {% if not user.is_staff and not user.is_superuser %}
+        [common]
+    {% endif %}
+    <br>
+    <br>
+    <div>
+        <a href="{% url 'note:add' %}">Add Note</a>
+    </div>
+{% endif %}
+<div class="album py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            {% for note in note_list %}
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4><a href="{{ note.get_absolute_url }}" class="mr-1">{{ note.title }}</a></h4>
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'note:edit' pk=note.pk %}" class="ml-2">Edit</a>
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'note:delete' pk=note.pk %}" class="ml-2">Delete</a>
+                        </div>
+                    </div>
+                </div>
+
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
