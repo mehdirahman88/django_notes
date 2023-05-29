@@ -215,9 +215,9 @@ class NoteViewsAuthorizationTestCase(TestCase):
         # Act: visit other's note
         url = reverse('noteapp:single', kwargs={'pk': self.note_2_1.pk})
         response = self.client.get(url)
-        # Assert
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.context, None)
+        # Assert: custom error
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'note/custom_error.html')
 
     def test_user_1_cannot_edit_other_notes(self):
         # Act
@@ -234,9 +234,9 @@ class NoteViewsAuthorizationTestCase(TestCase):
         # Act: visit other's note
         url = reverse('noteapp:edit', kwargs={'pk': self.note_2_1.pk})
         response = self.client.get(url)
-        # Assert
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.context, None)
+        # Assert: custom error
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'note/custom_error.html')
 
     def test_must_login_for_single_view(self):
         # Act: view note without log in
@@ -257,3 +257,35 @@ class NoteViewsAuthorizationTestCase(TestCase):
         next_url = url
         actual_redirect_url = reverse('noteapp:login') + f'?next={next_url}'
         self.assertRedirects(response, actual_redirect_url)
+
+
+class AccessingNonExistentNoteTestCases(TestCase):
+    def setUp(self):
+        # Arrange: 1 user, 1 note and user logged in
+        self.user_1 = User.objects.create_user(username='test_user_1', password='test_password')
+        self.note_1_1 = Note.objects.create(
+            title='Test Note 1: user 1', content='This is a test note', author=self.user_1
+        )
+        self.client.login(username='test_user_1', password='test_password')
+
+    def test_user_views_and_got_custom_error(self):
+        url = reverse('noteapp:single', kwargs={'pk': self.note_1_1.pk + 1})
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'note/custom_error.html')
+
+    def test_user_edits_and_got_custom_error(self):
+        url = reverse('noteapp:edit', kwargs={'pk': self.note_1_1.pk + 1})
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'note/custom_error.html')
+
+    def test_user_deletes_and_got_custom_error(self):
+        url = reverse('noteapp:single', kwargs={'pk': self.note_1_1.pk + 1})
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'note/custom_error.html')
+

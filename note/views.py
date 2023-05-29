@@ -1,14 +1,12 @@
 from django.contrib.auth import logout
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.core.paginator import Paginator
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, FormView
 
 from .forms import NoteAddForm, NoteEditForm
-from .mixins import ReMixinLoginRequired
+from .mixins import ReMixinLoginRequired, ReMixinGuardDispatchSingleObject
 from .models import Note
 
 
@@ -32,7 +30,7 @@ class IndexView(ReMixinLoginRequired, ListView):
         return queryset
 
 
-class SingleView(ReMixinLoginRequired, UserPassesTestMixin, DetailView):
+class SingleView(ReMixinLoginRequired, ReMixinGuardDispatchSingleObject, DetailView):
     model = Note
     template_name = 'note/single.html'
     context_object_name = 'note'
@@ -53,7 +51,7 @@ class AddView(ReMixinLoginRequired, CreateView):
         return super().form_valid(form)
 
 
-class EditView(ReMixinLoginRequired, UserPassesTestMixin, UpdateView):
+class EditView(ReMixinLoginRequired, ReMixinGuardDispatchSingleObject, UpdateView):
     model = Note
     form_class = NoteEditForm
     template_name = 'note/edit.html'
@@ -65,7 +63,7 @@ class EditView(ReMixinLoginRequired, UserPassesTestMixin, UpdateView):
         return item.author == self.request.user
 
 
-class Delete(ReMixinLoginRequired, UserPassesTestMixin, DeleteView):
+class Delete(ReMixinLoginRequired, ReMixinGuardDispatchSingleObject, DeleteView):
     model = Note
     template_name = 'note/delete.html'
     pk_url_kwarg = 'pk'
@@ -108,5 +106,3 @@ class UserSignup(FormView):
     def form_valid(self, form):
         form.save()
         return super().form_valid(form)
-
-
