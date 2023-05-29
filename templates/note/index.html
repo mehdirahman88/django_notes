@@ -21,6 +21,20 @@
 {% endif %}
 <div class="album py-5 bg-light">
     <div class="container">
+        <div class="row mb-5">
+            <form action="{% url 'noteapp:index' %}" method="GET" class="form-inline">
+                <div class="form-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search">
+                </div>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        <div class="row mb-3">
+            <div class="text-primary">Your Notes:</div>
+        </div>
+        {% if not note_list %}
+            <div class="text-danger">Nothing Found</div>
+        {% endif %}
         <div class="row">
             {% for note in note_list %}
                 <div class="row">

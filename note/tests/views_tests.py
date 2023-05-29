@@ -140,3 +140,19 @@ class NoteViewsAuthTestCase(TestCase):
         self.assertEqual(User.objects.count(), 2)
 
 
+class IndexViewSearchTestCase(TestCase):
+    def setUp(self):
+        # Arrange
+        self.user = User.objects.create_user(username='test_user', password='test_password')
+        self.client.login(username='test_user', password='test_password')
+        self.note1 = Note.objects.create(title='Test Note1', content='This is a test note', author=self.user)
+        self.note2 = Note.objects.create(title='Test Note2', content='This is a test note', author=self.user)
+        self.note3 = Note.objects.create(title='Something else', content='Something else', author=self.user)
+
+    def test_search_query(self):
+        url = reverse('noteapp:index')
+        response = self.client.get(url, {'search': 'test'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.note1.title)
+        self.assertContains(response, self.note2.title)
+        self.assertNotContains(response, self.note3.title)

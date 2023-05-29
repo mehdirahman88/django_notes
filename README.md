@@ -9,6 +9,7 @@ Demonstration of various django concepts through a note-taking web application.
   - click on a note and check detail of that note
   - edit note
   - delete note
+  - search note on title or content
 
 
 # Django Concepts
