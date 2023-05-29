@@ -27,3 +27,11 @@ Demonstration of various django concepts through a note-taking web application.
 - `python manage.py makemigrations`
 - `python manage.py migrate`
 - `python manage.py runserver`
+- It will run in: `http://127.0.0.1:8000/`
+
+
+# Run with Docker
+- `docker-compose -f docker-compose.yml build`
+- `docker-compose -f docker-compose.yml up -d`
+- Stop the container:
+  - `docker-compose -f docker-compose.yml stop`

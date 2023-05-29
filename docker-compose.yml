@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  django-notes:
+    build: .
+    volumes:
+      - .:/django-notes-app
+    ports:
+      - "8000:8000"
+    image: app:django-notes
+    container_name: django_notes_container
