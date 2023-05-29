@@ -31,4 +31,7 @@ jobs:
     - name: Generate Coverage Report
       run: |
         coverage report -m
-    
+    - name: Upload Coverage Badge
+      uses: mikepenz/coverage-badge@v1
+      with:
+        file: coverage.xml
