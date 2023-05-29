@@ -156,3 +156,104 @@ class IndexViewSearchTestCase(TestCase):
         self.assertContains(response, self.note1.title)
         self.assertContains(response, self.note2.title)
         self.assertNotContains(response, self.note3.title)
+
+
+class NoteViewsAuthorizationTestCase(TestCase):
+    def setUp(self):
+        # Arrange: 2 user and 2 notes each
+        self.user_1 = User.objects.create_user(username='test_user_1', password='test_password')
+        self.note_1_1 = Note.objects.create(
+            title='Test Note 1: user 1', content='This is a test note', author=self.user_1
+        )
+        self.note_1_2 = Note.objects.create(
+            title='Test Note 2: user 1', content='This is a test note', author=self.user_1
+        )
+
+        self.user_2 = User.objects.create_user(username='test_user_2', password='test_password')
+        self.note_2_1 = Note.objects.create(
+            title='Test Note 1: user 2', content='This is a test note', author=self.user_2
+        )
+        self.note_2_2 = Note.objects.create(
+            title='Test Note 2: user 2', content='This is a test note', author=self.user_2
+        )
+
+    def _login_and_redirect_to_index(self, username, password):
+        # Act: login with user credentials
+        url = reverse('noteapp:login')
+        response = self.client.post(url, {'username': username, 'password': password})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('noteapp:index'))
+        # Redirect
+        response = self.client.get(reverse('noteapp:index'))
+        # Assert: logged-in username in the page
+        self.assertContains(response, "Welcome, {}".format(username))
+
+        return response
+
+    def test_user_1_can_see_only_self_notes_in_index(self):
+        response = self._login_and_redirect_to_index('test_user_1', 'test_password')
+
+        self.assertEqual(Note.objects.count(), 4)
+
+        self.assertContains(response, self.note_1_1)
+        self.assertContains(response, self.note_1_2)
+        self.assertNotContains(response, self.note_2_1)
+        self.assertNotContains(response, self.note_2_2)
+
+    def test_user_1_cannot_see_other_notes_single_view(self):
+        # Act
+        _ = self._login_and_redirect_to_index('test_user_1', 'test_password')
+
+        # Act: visit own note
+        url = reverse('noteapp:single', kwargs={'pk': self.note_1_1.pk})
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'note/single.html')
+        self.assertEqual(response.context['note'], self.note_1_1)
+
+        # Act: visit other's note
+        url = reverse('noteapp:single', kwargs={'pk': self.note_2_1.pk})
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.context, None)
+
+    def test_user_1_cannot_edit_other_notes(self):
+        # Act
+        _ = self._login_and_redirect_to_index('test_user_1', 'test_password')
+
+        # Act: visit own note
+        url = reverse('noteapp:edit', kwargs={'pk': self.note_1_1.pk})
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'note/edit.html')
+        self.assertEqual(response.context['note'], self.note_1_1)
+
+        # Act: visit other's note
+        url = reverse('noteapp:edit', kwargs={'pk': self.note_2_1.pk})
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.context, None)
+
+    def test_must_login_for_single_view(self):
+        # Act: view note without log in
+        url = reverse('noteapp:single', kwargs={'pk': self.note_1_1.pk})
+        response = self.client.get(url)
+        # Assert: redirect to log in with target url as next
+        self.assertEqual(response.status_code, 302)
+        next_url = url
+        actual_redirect_url = reverse('noteapp:login') + f'?next={next_url}'
+        self.assertRedirects(response, actual_redirect_url)
+
+    def test_must_login_for_edit_view(self):
+        # Act: edit note without log in
+        url = reverse('noteapp:edit', kwargs={'pk': self.note_1_1.pk})
+        response = self.client.get(url)
+        # Assert: redirect to log in with target url as next
+        self.assertEqual(response.status_code, 302)
+        next_url = url
+        actual_redirect_url = reverse('noteapp:login') + f'?next={next_url}'
+        self.assertRedirects(response, actual_redirect_url)

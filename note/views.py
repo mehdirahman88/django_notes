@@ -32,10 +32,14 @@ class IndexView(ReMixinLoginRequired, ListView):
         return queryset
 
 
-class SingleView(ReMixinLoginRequired, DetailView):
+class SingleView(ReMixinLoginRequired, UserPassesTestMixin, DetailView):
     model = Note
     template_name = 'note/single.html'
     context_object_name = 'note'
+
+    def test_func(self):
+        item = self.get_object()
+        return item.author == self.request.user
 
 
 class AddView(ReMixinLoginRequired, CreateView):
@@ -49,12 +53,16 @@ class AddView(ReMixinLoginRequired, CreateView):
         return super().form_valid(form)
 
 
-class EditView(ReMixinLoginRequired, UpdateView):
+class EditView(ReMixinLoginRequired, UserPassesTestMixin, UpdateView):
     model = Note
     form_class = NoteEditForm
     template_name = 'note/edit.html'
     pk_url_kwarg = 'pk'
     success_url = reverse_lazy('noteapp:index')
+
+    def test_func(self):
+        item = self.get_object()
+        return item.author == self.request.user
 
 
 class Delete(ReMixinLoginRequired, UserPassesTestMixin, DeleteView):
